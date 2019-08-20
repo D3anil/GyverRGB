@@ -1,3 +1,6 @@
+## Модификация проекта ![AlexGyver](https://github.com/AlexGyver/GyverRGB)
+В проект добавлена поддержка дисплеев на контроллере ST7789
+
 ![PROJECT_PHOTO](https://github.com/AlexGyver/GyverRGB/blob/master/proj_img.jpg)
 # Контроллер для RGB светодиодных лент на Arduino
 * [Описание проекта](#chapter-0)

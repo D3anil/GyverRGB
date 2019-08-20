@@ -11,6 +11,10 @@
   - Исправлена ошибка с настройкой WIRING_VERSION
   - Исправлен баг при работе с управляющей кнопкой
 */
+/*
+  Модифицирован: D3anil
+  Добавлена поддержка OLED дислеев на базе ST7789 (и ST7789 без распаеного пина CS)
+*/
 
 // ================ НАСТРОЙКИ ================
 // ------ Схема ------
@@ -19,6 +23,11 @@
 
 // ------ Дисплей ------
 #define USE_OLED 1          // 1 - использовать дисплей, 0 - нет
+  // ------ Контроллер дисплея ------
+  // закоментировать все, кроме вашего
+  //#define SSD1306           // дисплей на контроллере SSD1306
+  #define ST7789            // дисплей на контроллере ST7789
+
 #define LCD_BACKL 1         // автоотключение подсветки дисплея (1 - разрешить) 
 #define BACKL_TOUT 60       // таймаут неактивности отключения дисплея, секунды
 #define CONTRAST 150        // контрастность (яркость) дисплея 0-255
@@ -199,10 +208,26 @@ GRGB strip(PIN_R, PIN_G, PIN_B);  // куда подключены цвета (R
 Encoder enc(CLK, DT, SW);
 
 #if (USE_OLED == 1)
-#include <Wire.h>
-#include <SSD1306Ascii.h>
-#include <SSD1306AsciiWire.h>
-SSD1306AsciiWire oled;
+  #if defined(SSD1306)
+    #include <Wire.h>
+    #include <SSD1306Ascii.h>
+    #include <SSD1306AsciiWire.h>
+    SSD1306AsciiWire oled;
+  #elif defined(ST7789)
+    #include <SPI.h>
+    #include <D3anil_ST7789_wrapper.h>
+
+    #define TFT_DC    8
+    #define TFT_RST   9
+    #define TFT_CS    10   // only for displays with CS pin
+    #define TFT_MOSI  11   // for hardware SPI data pin (all of available pins)
+    #define TFT_SCLK  13   // for hardware SPI sclk pin (all of available pins)
+    #define TFT_W 240
+    #define TFT_H 240
+
+    int sdfsdf = 1;
+    ST7789_wrapper oled = ST7789_wrapper(TFT_DC, TFT_RST, TFT_MOSI, TFT_SCLK, -1); //for display without CS pin
+  #endif
 #endif
 
 #if (USE_BTN == 1)
@@ -369,26 +394,32 @@ void setup() {
   delay(100);
 
 #if (USE_OLED == 1)
-  Wire.begin();
-  Wire.setClock(400000L);
-  oled.begin(&Adafruit128x32, I2C_ADDRESS);
-  oled.setContrast(CONTRAST);
+  #if defined(SSD1306)
+    Wire.begin();
+    Wire.setClock(400000L);
+    oled.begin(&Adafruit128x32, I2C_ADDRESS);
+    oled.setContrast(CONTRAST);
 
-  if (ROTATE_DISP) {
-    oled.ssd1306WriteCmd(SSD1306_SEGREMAP);
-    oled.ssd1306WriteCmd(SSD1306_COMSCANINC);
-  }
-  oled.clear();
+    if (ROTATE_DISP) {
+      oled.ssd1306WriteCmd(SSD1306_SEGREMAP);
+      oled.ssd1306WriteCmd(SSD1306_COMSCANINC);
+    }
+    oled.clear();
 
-  // шрифт дисплея, выбирай любой
-  oled.setFont(Adafruit5x7);
-  //Adafruit5x7
-  //font5x7
-  //Iain5x7
-  //lcd5x7
-  //Stang5x7
-  //System5x7
-  //SystemFont5x7
+    // шрифт дисплея, выбирай любой
+    oled.setFont(Adafruit5x7);
+    //Adafruit5x7
+    //font5x7
+    //Iain5x7
+    //lcd5x7
+    //Stang5x7
+    //System5x7
+    //SystemFont5x7
+  #elif defined(ST7789)
+    oled.init(TFT_W, TFT_H);
+    oled.setRotation(0); // 0 - 0 deg, 1 - 90 deg, 2 - 180 deg, 3 - 270 deg
+  #endif
+
 #endif
 
   settingsChanged = true;
